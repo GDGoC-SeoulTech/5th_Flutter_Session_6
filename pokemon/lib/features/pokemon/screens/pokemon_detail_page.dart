@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:pokemon/features/pokemon/model/pokemon_model.dart';
+// 이제 공통으로 빼준 utils 데려와서 사용합시다
+import 'package:pokemon/features/pokemon/utils/pokemon_type_utils.dart';
 
 /// pokemon_detail_page.dart
 ///
@@ -93,18 +95,18 @@ class PokemonDetailPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: _getTypeColor(type),
+        color: PokemonTypeUtils.getTypeColor(type),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _getTypeColor(type).withOpacity(0.3),
+            color: PokemonTypeUtils.getTypeColor(type).withOpacity(0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Text(
-        _getTypeKorean(type),
+        PokemonTypeUtils.getTypeKorean(type),
         style: const TextStyle(
           color: CupertinoColors.white,
           fontWeight: FontWeight.bold,
@@ -132,17 +134,16 @@ class PokemonDetailPage extends StatelessWidget {
           // 제목
           const Text(
             '능력치',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           // 능력치 게이지들
-          ...pokemon.stats.map((stat) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _buildStatBar(stat),
-              )),
+          ...pokemon.stats.map(
+            (stat) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _buildStatBar(stat),
+            ),
+          ),
         ],
       ),
     );
@@ -170,10 +171,7 @@ class PokemonDetailPage extends StatelessWidget {
           width: 70,
           child: Text(
             stat.name,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF666666),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
           ),
         ),
 
@@ -186,9 +184,7 @@ class PokemonDetailPage extends StatelessWidget {
               child: Stack(
                 children: [
                   // 배경
-                  Container(
-                    color: const Color(0xFFE0E0E0),
-                  ),
+                  Container(color: const Color(0xFFE0E0E0)),
                   // 진행 바
                   FractionallySizedBox(
                     widthFactor: percentage,
@@ -211,82 +207,10 @@ class PokemonDetailPage extends StatelessWidget {
           child: Text(
             '${stat.value}',
             textAlign: TextAlign.end,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ),
       ],
     );
-  }
-
-  /// 타입별 색상
-  Color _getTypeColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'fire':
-        return const Color(0xFFFF6B6B);
-      case 'water':
-        return const Color(0xFF4ECDC4);
-      case 'grass':
-        return const Color(0xFF95E1D3);
-      case 'electric':
-        return const Color(0xFFFECA57);
-      case 'ice':
-        return const Color(0xFF74B9FF);
-      case 'fighting':
-        return const Color(0xFFFF7979);
-      case 'poison':
-        return const Color(0xFFA29BFE);
-      case 'ground':
-        return const Color(0xFFDFB57B);
-      case 'flying':
-        return const Color(0xFF81ECEC);
-      case 'psychic':
-        return const Color(0xFFFD79A8);
-      case 'bug':
-        return const Color(0xFF6BCF7F);
-      case 'rock':
-        return const Color(0xFFB8A38A);
-      case 'ghost':
-        return const Color(0xFF6C5CE7);
-      case 'dragon':
-        return const Color(0xFF0984E3);
-      case 'dark':
-        return const Color(0xFF2D3436);
-      case 'steel':
-        return const Color(0xFFB2BEC3);
-      case 'fairy':
-        return const Color(0xFFFDCB6E);
-      case 'normal':
-        return const Color(0xFFDFE6E9);
-      default:
-        return const Color(0xFF999999);
-    }
-  }
-
-  /// 타입 한글 변환
-  String _getTypeKorean(String typeEn) {
-    const typeMap = {
-      'fire': '불꽃',
-      'water': '물',
-      'grass': '풀',
-      'electric': '전기',
-      'ice': '얼음',
-      'fighting': '격투',
-      'poison': '독',
-      'ground': '땅',
-      'flying': '비행',
-      'psychic': '에스퍼',
-      'bug': '벌레',
-      'rock': '바위',
-      'ghost': '고스트',
-      'dragon': '드래곤',
-      'dark': '악',
-      'steel': '강철',
-      'fairy': '페어리',
-      'normal': '노말',
-    };
-    return typeMap[typeEn.toLowerCase()] ?? typeEn;
   }
 }
