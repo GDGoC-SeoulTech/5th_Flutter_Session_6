@@ -18,11 +18,11 @@ class PokemonListPage extends StatefulWidget {
 }
 
 class _PokemonListPageState extends State<PokemonListPage> {
-  /// Step 1: 상태 변수 정의
-  /// 여기서는 포켓몬 API를 사용하는 데에 필요한 로딩 상태, 에러 메시지, 불러온 포켓몬 리스트를 정의했습니다!
   bool isLoading = true;
   String? errorMessage;
   List<Pokemon> pokemons = [];
+  // Step1. 검색 결과를 담아줄 리스트를 만들어주기
+  List<Pokemon> filteredPokemons = []; // 검색 결과 리스트
 
   /// Step 2: API 호출
   /// initState()는 StatefulWidget이 처음 생성될 때 단 한 번 실행되는 함수입니다.
@@ -41,6 +41,7 @@ class _PokemonListPageState extends State<PokemonListPage> {
       final list = await PokemonApi.fetchPokemonList(limit: 20);
       setState(() {
         pokemons = list;
+        filteredPokemons = list; // 🔹 초기에는 전체 리스트 보여줌
         isLoading = false;
       });
     } catch (e) {
@@ -51,29 +52,51 @@ class _PokemonListPageState extends State<PokemonListPage> {
     }
   }
 
-  /// Step 4: 리스트 화면 UI
-  /// build()를 통해 화면을 그리는 부분입니다!
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text("Pokémon"),
-      ), // 상단 네비게이션 바 중앙에 타이틀을 지정한 부분입니다!
+      navigationBar: const CupertinoNavigationBar(middle: Text("Pokémon")),
+      // SafeArea: UI가 기기 영역에 가려지지 않도록 패딩 잡아줌
       child: SafeArea(
-        // SafeArea는 카메라 영역이나 화면 하단 제스처 영역을 제외한 영역을 의미합니다!
         child: isLoading
-            ? const Center(child: CupertinoActivityIndicator()) // 로딩 아이콘
+            ? const Center(child: CupertinoActivityIndicator())
             : errorMessage != null
-            ? Center(child: Text(errorMessage!)) // 에러 메시지 발생 시 텍스트 보여줌
-            : ListView.builder(
-                // 데이터를 정상적으로 불러온 경우 -> 리스트 뷰를 보여붑니다!
-                itemCount: pokemons.length,
-                itemBuilder: (context, index) {
-                  final p = pokemons[index];
-                  return PokemonListItem(
-                    pokemon: p,
-                  ); // 리스트 아이템을 따로 정의한 부분입니다! 커맨드 클릭해서 이동해주세요.
-                },
+            ? Center(child: Text(errorMessage!))
+            : Column(
+                children: [
+                  // Step 3. 리스트 상단에 SearchBar 삽입
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: CupertinoSearchTextField(
+                      placeholder: "포켓몬 이름 검색",
+                      onChanged: (query) {
+                        setState(() {
+                          filteredPokemons = pokemons
+                              .where(
+                                (p) =>
+                                    p.nameKo.toLowerCase().contains(
+                                      query.toLowerCase(),
+                                    ) ||
+                                    p.nameEn.toLowerCase().contains(
+                                      query.toLowerCase(),
+                                    ),
+                              )
+                              .toList();
+                        });
+                      },
+                    ),
+                  ),
+                  // 🔹 리스트
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredPokemons.length,
+                      itemBuilder: (context, index) {
+                        final p = filteredPokemons[index];
+                        return PokemonListItem(pokemon: p);
+                      },
+                    ),
+                  ),
+                ],
               ),
       ),
     );
