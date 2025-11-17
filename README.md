@@ -10,5 +10,5 @@
 1. **이름(검색어) 기반 필터링**: SearchBar를 만들고, 포켓몬의 이름으로 필터링합니다.
 2. **속성 칩**: 속성 칩을 만들고, 속성을 기반으로 필터링합니다.
 
-
+![6th Session Result](resources/6th_session.gif)
 
