@@ -2,14 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:pokemon/features/pokemon/api/pokemon_api.dart';
 import 'package:pokemon/features/pokemon/components/pokemon_list_item.dart';
 import 'package:pokemon/features/pokemon/model/pokemon_model.dart';
+import 'package:pokemon/features/pokemon/utils/pokemon_type_utils.dart';
 
-/// pokemon_list_page.dart
-///
-/// PokemonListPage
-///
-/// 이 부분은 앱의 첫 화면인 포켓몬 리스트를 보여주는 화면입니다!
-/// 자세히 보면 StatefulWidget을 implement하고 있으므로, 데이터가 변하는 위젯이라고 생각할 수 있습니다!
-/// 아래 코드 주석을 이어서 살펴보아요.
 class PokemonListPage extends StatefulWidget {
   const PokemonListPage({super.key});
 
@@ -21,27 +15,25 @@ class _PokemonListPageState extends State<PokemonListPage> {
   bool isLoading = true;
   String? errorMessage;
   List<Pokemon> pokemons = [];
-  // Step1. 검색 결과를 담아줄 리스트를 만들어주기
+  // Step A-1. 검색 결과를 담아줄 리스트를 만들어주기
   List<Pokemon> filteredPokemons = []; // 검색 결과 리스트
 
-  /// Step 2: API 호출
-  /// initState()는 StatefulWidget이 처음 생성될 때 단 한 번 실행되는 함수입니다.
-  /// loadPokemons()를 통해 화면이 보여지자마자 포켓몬 API를 불러옴을 알 수 있습니다!
+  // Step B-1. 필터 기능 합치기(텍스트 검색 + 타입 필터링)
+  String searchQuery = "";
+  String? selectedType;
+
   @override
   void initState() {
     super.initState();
     loadPokemons();
   }
 
-  /// Step 3: 포켓몬 API 사용
-  /// loadPokemons()에서는 포켓몬 API로부터의 결과를 처음에 선언한 변수에 저장하는 역할을 합니다!
-  /// setState()를 이용해서 데이터를 변경하면서 동시에 화면도 갱신하도록 할 수 있습니다!
   Future<void> loadPokemons() async {
     try {
       final list = await PokemonApi.fetchPokemonList(limit: 20);
       setState(() {
         pokemons = list;
-        filteredPokemons = list; // 🔹 초기에는 전체 리스트 보여줌
+        filteredPokemons = list; // 초기에는 전체 리스트 보여줌
         isLoading = false;
       });
     } catch (e) {
@@ -50,6 +42,51 @@ class _PokemonListPageState extends State<PokemonListPage> {
         isLoading = false;
       });
     }
+  }
+
+  // Step B-2. 필터 적용 함수(검색어 변경, 속성에 따른 필터링 관리)
+  void applyFilters() {
+    setState(() {
+      filteredPokemons = pokemons.where((p) {
+        final nameMatch =
+            p.nameKo.contains(searchQuery) ||
+            p.nameEn.toLowerCase().contains(searchQuery.toLowerCase());
+
+        final typeMatch =
+            selectedType == null || p.types.contains(selectedType);
+
+        return nameMatch && typeMatch;
+      }).toList();
+    });
+  }
+
+  Widget _buildTypeChip(String label, String? type) {
+    final isSelected = selectedType == type;
+    final color = type != null
+        ? PokemonTypeUtils.getTypeColor(type)
+        : CupertinoColors.systemGrey3;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: GestureDetector(
+        onTap: () {
+          selectedType = type;
+          applyFilters();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? color : color.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? CupertinoColors.white : CupertinoColors.black,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -64,29 +101,28 @@ class _PokemonListPageState extends State<PokemonListPage> {
             ? Center(child: Text(errorMessage!))
             : Column(
                 children: [
-                  // Step 3. 리스트 상단에 SearchBar 삽입
+                  // Step A-2. 리스트 상단에 SearchBar 삽입
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: CupertinoSearchTextField(
                       placeholder: "포켓몬 이름 검색",
-                      onChanged: (query) {
-                        setState(() {
-                          filteredPokemons = pokemons
-                              .where(
-                                (p) =>
-                                    p.nameKo.toLowerCase().contains(
-                                      query.toLowerCase(),
-                                    ) ||
-                                    p.nameEn.toLowerCase().contains(
-                                      query.toLowerCase(),
-                                    ),
-                              )
-                              .toList();
-                        });
+                      onChanged: (value) {
+                        searchQuery = value.trim();
+                        applyFilters();
                       },
                     ),
                   ),
-                  // 🔹 리스트
+                  // Step B-3. 속성 - 가로 스크롤 칩 UI 만들기
+                  SizedBox(
+                    height: 30,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: PokemonTypeUtils.pokemonTypes.map((t) {
+                        return _buildTypeChip(t["label"]!, t["type"]);
+                      }).toList(),
+                    ),
+                  ),
+                  // 리스트 부분
                   Expanded(
                     child: ListView.builder(
                       itemCount: filteredPokemons.length,
