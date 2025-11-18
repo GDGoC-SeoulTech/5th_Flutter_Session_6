@@ -64,6 +64,7 @@ class PokemonTypeUtils {
       'steel': '강철',
       'fairy': '페어리',
       'normal': '노말',
+      'unknown': '???',
     };
     return typeMap[typeEn.toLowerCase()] ?? typeEn;
   }
@@ -89,5 +90,6 @@ class PokemonTypeUtils {
     {"label": "강철", "type": "steel"},
     {"label": "페어리", "type": "fairy"},
     {"label": "노말", "type": "normal"},
+    {"label": "???", "type": "unknown"},
   ];
 }
